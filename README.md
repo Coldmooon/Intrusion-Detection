@@ -1,7 +1,7 @@
 Intrusion Detection based on Optical Flow
 ===========================
 
-Created by Coldmooon. I borrow some codes from http://blog.csdn.net/zouxy09
+Created by Coldmooon. I borrowed some codes from http://blog.csdn.net/zouxy09
 
 # Introduction
 
