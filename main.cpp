@@ -5,9 +5,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/video/video.hpp"
-#include <sstream>
-#include <SFML/Audio.hpp>
-#include <SFML/Audio/SoundSource.hpp>
 
 using namespace cv;
 using namespace std;
@@ -18,7 +15,6 @@ using namespace std;
 // http://members.shaw.ca/quadibloc/other/colint.htm
 // This code is modified from:
 // http://vision.middlebury.edu/flow/data/
-// http://blog.csdn.net/zouxy09
 
 typedef struct AllSelections // 一个鼠标选择区域
 {
@@ -27,7 +23,7 @@ typedef struct AllSelections // 一个鼠标选择区域
     int id;
 } PAllSelections;
 
-int ihash[10] = {0}; //存储每个检测区域的 id 号和 allselections 的对应关系。
+int ihash[10] = {0}; // 存储每个检测区域的 id 号和 allselections 的对应关系。
 int ifUsed[10] = {0};
 
 char c = '0';  // 检测区域的类型，'0'表示其他类型，不进行检测。
@@ -48,20 +44,21 @@ vector<int> timeCount(100,0); // 每次运行程序，最多画100次检测区�
 vector<int> timeCountForRegion(100,0); // 每次运行程序，最多画100次检测区域
 int nArea = 0;
 
-// 判断来自键盘的输入是否为一个数字
-//int validInput()
-//{
-//    int x;
-//    std::cin >> x;
-//    while(std::cin.fail())
-//    {
-//        std::cin.clear();
-//        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-//        std::cout << "输入错误，请输入数字: " << std::endl;
-//        std::cin >> x;
-//    }
-//    return x;
-//}
+/* 判断来自键盘的输入是否为一个数字
+int validInput()
+{
+    int x;
+    std::cin >> x;
+    while(std::cin.fail())
+    {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+        std::cout << "输入错误，请输入数字: " << std::endl;
+        std::cin >> x;
+    }
+    return x;
+} */
+
 // 得到当前监测区域的 1 - 9 编号
 int getID(int array[] )
 {
@@ -74,6 +71,7 @@ int getID(int array[] )
     return 0;
 }
 
+// 得到线段上的点的坐标
 void getPointOnTheLine(Point _start, Point _end, vector<Point> & _set)
 {
     Point start = _start;
@@ -95,7 +93,8 @@ void getPointOnTheLine(Point _start, Point _end, vector<Point> & _set)
     }
 }
 
-void onMouse(int event, int x, int y, int, void*) // 鼠标按下时触发该函数一次，鼠标松开时再次触发该函数一次。
+// 鼠标按下时触发该函数一次，鼠标松开时再次触发该函数一次。
+void onMouse(int event, int x, int y, int, void*)
 {
     // bSelectObject 初始值是false，当鼠标按下时不触发该if条件句。当鼠标松开，再次触发该函数时，该if条件句被执行。
     // 注意，这里的“松开鼠标”是广义的“松开”。该 onMouse 函数会扑捉鼠标的移动轨迹，每扑捉一次轨迹，都算作一次“松开”
@@ -195,6 +194,7 @@ void onMouse(int event, int x, int y, int, void*) // 鼠标按下时触发该函
     }
 }
 
+#ifdef DEBUG
 void makecolorwheel(vector<Scalar> &colorwheel)
 {
     int RY = 15;
@@ -213,9 +213,11 @@ void makecolorwheel(vector<Scalar> &colorwheel)
     for (i = 0; i < BM; i++) colorwheel.push_back(Scalar(255*i/BM,	   0,		 255));
     for (i = 0; i < MR; i++) colorwheel.push_back(Scalar(255,	   0,		 255-255*i/MR));
 }
+#endif
 
-void motionToColor(const Mat & flow, Mat &color)
+void DEBUG_motionToColor(const Mat & flow, Mat &color)
 {
+#ifdef DEBUG
     if (color.empty())
         color.create(flow.rows, flow.cols, CV_8UC3);
     
@@ -278,8 +280,20 @@ void motionToColor(const Mat & flow, Mat &color)
             }
         }
     }
+#endif
 }
 
+
+void TWO_LEVEL_DEBUG_imshowPoint(const Point currentPoint, const Mat frame, const string windowName)
+{
+#ifdef DEBUG_LEVEL_TWO
+    Mat tempFrame;
+    frame.copyTo(tempFrame);
+    circle(tempFrame, currentPoint, 2, Scalar(0,255,0));
+    imshow(windowName, tempFrame);
+    waitKey(0);
+#endif
+}
 
 
 static void show_usage( string name )
@@ -330,24 +344,15 @@ int main(int argc, char** argv)
     //namedWindow("flow", 1);
     
     int delay = 10;	// 控制播放速度
-    //char c;	// 键值
-    const char* WIN_RESULT = "Result";
-    //namedWindow(WIN_RESULT, CV_WINDOW_NORMAL);
+//    const char* WIN_RESULT = "Result";
+    string WIN_RESULT = "Result";
+//    namedWindow(WIN_RESULT, CV_WINDOW_NORMAL);
     namedWindow(WIN_RESULT, WINDOW_AUTOSIZE);
     // 鼠标响应函数
     setMouseCallback(WIN_RESULT, onMouse, 0);
     bool paused = false;
-    int numFrame = 0;
     int energyOnLine = 0;
     int energyInRegion = 0;
-    string name = "/Users/Coldmoon/Music/音效素材/Crash.BreakingGlass/breakglass3.wav";
-    
-    sf::Music music;
-    if (!music.openFromFile(name))
-    {
-        cout << "无法播放音频文件" << endl;
-        return -1;
-    }
     for(;;)
     {
         if(!paused)
@@ -356,18 +361,14 @@ int main(int argc, char** argv)
             // 这种错误。这说明，该错误是在给 Mat 赋值的时候出现的。那么同时也说明，如果是光流计算那出现这种错误的话，一定是给 flow 这个
             // Mat 赋值的时候出错的。
             cap >> frame;
-            numFrame++;
         }
-        
         frame.copyTo(img);
-        //img = frame;
-        cvtColor(frame, gray, CV_BGR2GRAY);
-        
         
         if(bTracking == true) // 如果捕获鼠标了，就开始干活
         {
             if(!paused) // 是否按下了暂停键
             {
+                cvtColor(frame, gray, CV_BGR2GRAY);
                 for(int k = 0; k < allSelection.size(); ++k)
                 {
                     Mat prevgray, roi, flow, motion2color;
@@ -381,52 +382,34 @@ int main(int argc, char** argv)
                         flow.release();
                         continue;
                     }
-                    else
+                    else if(allSelection[k].type == 'R' || allSelection[k].type == 'r')
                     {
-                        if(allSelection[k].type == 'R' || allSelection[k].type == 'r')
-                        {
-                            std::ostringstream number; number << allSelection[k].id;
-                            rectangle(frame, allSelection[k].selection, cv::Scalar(255,255,0), 2);
-                            putText(frame, number.str(), Point(allSelection[k].selection.x, allSelection[k].selection.y-5),
+                        std::ostringstream number; number << allSelection[k].id;
+                        rectangle(frame, allSelection[k].selection, cv::Scalar(255,255,0), 2);
+                        putText(frame, number.str(), Point(allSelection[k].selection.x, allSelection[k].selection.y-5),
                                     FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255,255,0), 1, CV_AA);
-                        }
-
-                        if(allSelection[k].type == 'L' || allSelection[k].type == 'l')
-                        {
-                            std::ostringstream number; number << allSelection[k].id;
-                            line(frame, start[k], endP[k], Scalar(0,255,0));
-                            putText(frame, number.str(), Point(allSelection[k].selection.x, allSelection[k].selection.y-5),
-                                    FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255,255,0), 1, CV_AA);
-                        }
-                        
                     }
-                    
+                    else if(allSelection[k].type == 'L' || allSelection[k].type == 'l')
+                    {
+                        std::ostringstream number; number << allSelection[k].id;
+                            line(frame, start[k], endP[k], Scalar(0,255,0));
+                        putText(frame, number.str(), Point(allSelection[k].selection.x, allSelection[k].selection.y-5),
+                                    FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255,255,0), 1, CV_AA);
+                    }
+                    else
+                        continue;
                     double t = (double)cvGetTickCount();
                     //Mat roi(gray, selection); // 在这声明的话，会没有实际效果。
                     //gray(allSelection[k]).copyTo(roi);
                     //allPrevgray[k].copyTo(prevgray);
                     roi = gray(allSelection[k].selection);
-                    //cout << "roi: " << roi << endl;
                     prevgray = allPrevgray[k];
-                    //cout << "prevgray: " << prevgray << endl;
                     if( prevgray.data )
                     {
                         // 如果出现 incorrect checksum for freed object - object was probably modified after being freed.
                         // 错误，则可能是多释放了一次Mat，看 http://bbs.csdn.net/topics/380093493?page=1#post-394849205
                         calcOpticalFlowFarneback(prevgray, roi, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
-                        //cout << flow << endl;
-                        //if(!flow.data) cout << "ERROR: no data in flow." << endl;
-                        //cout << "flow.rows  = " << flow.rows << endl << "flow.cols = " << flow.cols << endl;
-                        // motionToColor(flow, motion2color);
-                        
-                        //                    for( int i = 0; i < flow.rows; ++i)
-                        //                    {
-                        //                        Point2f* data = flow.ptr<Point2f>(i);
-                        //                        for( int j = 0; j < flow.cols; ++j)
-                        //                            cout << "(" << data[j].x << "," << data[j].y << ")" << "  ";
-                        //                        cout << endl;
-                        //                    }
-                        
+                        DEBUG_motionToColor(flow, motion2color);
                         //方法一：
                         //Point2f fxy;
                         if(allSelection[k].type == 'R' || allSelection[k].type == 'r')
@@ -436,35 +419,23 @@ int main(int argc, char** argv)
                                 Point2f* data = flow.ptr<Point2f>(i);
                                 for( int j = 0; j < flow.cols; ++j)
                                 {
-                                    //                            float xenergy = data[j].x*data[j].x;
-                                    //                            float yenergy = data[j].y*data[j].y;
-                                    //                            cout << "energy: " << xenergy + yenergy << endl;
                                     energyInRegion += data[j].x*data[j].x + data[j].y*data[j].y;
                                 }
                             }
-                            
                             if (energyInRegion > 5000) timeCountForRegion[k] = 50;
                             if ( timeCountForRegion[k] > 0)
                             {
                                 putText(frame, ":Region Alarm!", Point(allSelection[k].selection.x+10, allSelection[k].selection.y-5),
                                         FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255,255,0), 1, CV_AA);
-                                if (music.getStatus() == sf::Music::Stopped) music.play();
-                                else {cout << "第 " << numFrame << " 帧播放中" << endl;}
                             }
                             rectangle(frame, allSelection[k].selection, cv::Scalar(255,255,0), 2);
                             if (timeCountForRegion[k] != 0) timeCountForRegion[k]--;
                         }
-                        
-                        if(allSelection[k].type == 'L' || allSelection[k].type == 'l')
+                        else if(allSelection[k].type == 'L' || allSelection[k].type == 'l')
                         {
                             for( int i = 0; i < allPointSets[k].size()-1; ++i)
                             {
-                                //                    Mat tempFrame;
-                                //                    frame.copyTo(tempFrame);
-                                //                    circle(tempFrame, Point(pointSets[i].x, pointSets[i].y), 2, Scalar(0,255,0));
-                                //                    imshow(WIN_RESULT, tempFrame);
-                                //                    if(waitKey(10)>=0)
-                                //                        break;
+                                TWO_LEVEL_DEBUG_imshowPoint(allPointSets[k][i], frame, WIN_RESULT);
                                 
                                 //方法一：方法一还需要额外打开 268 行对 fxy 的声明
                                 //fxy = flow.at<Point2f>((pointSets[i].y-start.y), (pointSets[i].x-start.x));
@@ -481,37 +452,34 @@ int main(int argc, char** argv)
                                 int col = allPointSets[k][i].x-allSelection[k].selection.x;// 找到当前像素点在flow中对应的列数
                                 
                                 // 从左下到右上划线时，会提前报警，因为物体的影子会先于物体接触警戒线。
-                                //float xenergy = (fxy[col]).x;
-                                //float yenergy = fxy[col].y;
                                 energyOnLine += fxy[col].x * fxy[col].x + fxy[col].y * fxy[col].y;
-                                
-                                //cout << "energyOnLine[" << i << "]: " << energyOnLine << endl;
                             }
-                            
-                            if (energyOnLine > 1000) energyOnLine = 1000;
                             if (energyOnLine > 100 ) timeCount[k] = 50;
                             if ( timeCount[k] > 0)
                             {
                                 putText(frame, ":Line Alarm!", Point(allSelection[k].selection.x+10, allSelection[k].selection.y-5),
                                         FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0,255,0), 1, CV_AA);
-                                if (music.getStatus() == sf::Music::Stopped) music.play();
-                                else {cout << "第 " << numFrame << " 帧播放中" << endl;}
                             }
                             line(frame, start[k], endP[k], Scalar(0,255,0));
                             if (timeCount[k] != 0) timeCount[k]--;
                         }
+                        else
+                        {
+                            cout << "Type Error!" << endl;
+                            exit(0);
+                        }
                         // flow的大小是107*150，而pointSets的大小是 151。所以这里要对pointSets.size()-1
                         
-                        //                    char fileName[256];
-                        //                    sprintf(fileName, "overenergy%06d.jpg",numFrame);
+                        //  char fileName[256];
+                        //  sprintf(fileName, "overenergy%06d.jpg",numFrame);
                         //                    if(energyInRegion > 1000 || energyOnLine > 30) imwrite(fileName, motion2color);
                         //cout << "energyInRegionSum: " << energyInRegion << endl;
                         //cout << "energyOnLineSum: " << energyOnLine << endl;
                         //imshow("flow", motion2color); // 如果在 waitkey 之前， flow 被release 掉，那么就不会显示 flow 窗口
                     } // if( prevgray.data )
                     
-                    //                if(waitKey(10)>=0)
-                    //                    break;
+                    //  if(waitKey(10)>=0)
+                    //      break;
                     //std::swap(allPrevgray[k], roi);
                     //imshow("roi", roi );
                     roi.copyTo(allPrevgray[k]); // copyTo 这种方法也可以。
@@ -523,7 +491,7 @@ int main(int argc, char** argv)
                     //roi.release();
                     //flow.release();
                 } // for(;roi;)
-            } // paused
+            } // if paused
         } // if(bTracking == true)
         
         //setWindowProperty(WIN_RESULT,CV_WND_PROP_FULLSCREEN,CV_WINDOW_FULLSCREEN);
@@ -536,22 +504,21 @@ int main(int argc, char** argv)
         // 注意：c一旦被赋值，会在接下来的每一帧里，都 keep 这个值。为了程序不出错，最好每帧结束后，清空c。
         if (key == 'r' || key == 'R' || key == 'l' || key == 'L' )
         {
-//            if( key != 'd')
-                c = key;
-//            else
-//            {
-//                while (1)
-//                {
-//                    int delWin;
-//                    cout << "输入你想删除的检测区域编号（0 退出）: " << endl;
-//                    delWin = validInput();
-//                    if ( delWin >= allSelection.size() ) delWin = allSelection.size() - 1;
-//                    else if (delWin == 0) break;
-//                    //std::vector<AllSelections>::iterator it = allSelection.begin() + delWin;
-//                    //allSelection.erase(it);
-//                    allSelection[delWin-1].type = 0;
-//                }
-//            }
+            c = key;
+            
+            /* 删除模式代码（未启用）
+            if( key != 'd') {
+                while (1) {
+                    int delWin;
+                    cout << "输入你想删除的检测区域编号（0 退出）: " << endl;
+                    delWin = validInput();
+                    if ( delWin >= allSelection.size() ) delWin = allSelection.size() - 1;
+                    else if (delWin == 0) break;
+                    //std::vector<AllSelections>::iterator it = allSelection.begin() + delWin;
+                    //allSelection.erase(it);
+                    allSelection[delWin-1].type = 0;
+                }
+            } */
         }
         else if (key >= 49 && key <= 57)
         {
@@ -559,16 +526,7 @@ int main(int argc, char** argv)
             allSelection[ihash[p]].type = 0;
             ifUsed[p] = 0;
         }
-        cout << "c: " << c << endl;
-        //        if(c == 'r' || c == 'R')
-        //        {
-        //            allSelection[nArea-1].type = 'r';
-        //        }
-        //        else if(c == 'l' || c == 'L')
-        //        {
-        //            allSelection[nArea-1].type = 'l';
-        //        }
-        if( key == 27 ) // 按 ESC 键退出。
+        else if( key == 27 ) // 按 ESC 键退出。
             break;
         switch(key)
         {
