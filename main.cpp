@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 #include <string>
 #include "opencv2/imgproc/imgproc.hpp"
@@ -37,7 +37,7 @@ Mat img;	// 输出的目标图像
 
 vector<Mat> allPrevgray;
 vector<Point> pointSets;
-vector< vector<Point>> allPointSets;
+vector< vector<Point> > allPointSets;
 vector<Point> start;
 vector<Point> endP;
 vector<int> timeCount(100,0); // 每次运行程序，最多画100次检测区域
