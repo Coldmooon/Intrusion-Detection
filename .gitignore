@@ -1,0 +1,130 @@
+## General
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.cuo
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# files built from caffe
+build
+.build_release
+distribute
+python
+
+# training files of caffe
+*.caffemodel
+*.solverstate
+
+# caffe data files
+data/ilsvrc12/det_synset_words.txt
+data/ilsvrc12/imagenet.bet.pickle
+data/ilsvrc12/imagenet_mean.binaryproto
+data/ilsvrc12/synset_words.txt
+data/ilsvrc12/synsets.txt
+data/ilsvrc12/test.txt
+data/ilsvrc12/train.txt
+data/ilsvrc12/val.txt
+._imagenet_mean.binaryproto
+._synset_words.txt
+._synsets.txt
+._test.txt
+._train.txt
+._val.txt
+
+# Compiled protocol buffers
+*.pb.h
+*.pb.cc
+*_pb2.py
+
+# Compiled python
+*.pyc
+
+# Compiled MATLAB
+*.mex*
+
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
+# Editor temporaries
+*.swp
+*~
+
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
+
+# Eclipse Project settings
+*.*project
+.settings
+
+# QtCreator files
+*.user
+
+# PyCharm files
+.idea
+
+# OSX dir files
+.DS_Store
+
+## Caffe
+
+# User's build configuration
+Makefile.config
+
+# Data and models are either
+# 1. reference, and not casually committed
+# 2. custom, and live on their own unless they're deliberated contributed
+data/*
+*.caffemodel
+*.caffemodel.h5
+*.solverstate
+*.solverstate.h5
+*.binaryproto
+*leveldb
+*lmdb
+
+# build, distribute, and bins (+ python proto bindings)
+build
+.build_debug/*
+.build_release/*
+distribute/*
+*.testbin
+*.bin
+python/caffe/proto/
+cmake_build
+.cmake_build
+
+# Generated documentation
+docs/_site
+docs/gathered
+_site
+doxygen
+docs/dev
+
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*
+
+# Costum
+.vscode
+
