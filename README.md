@@ -6,7 +6,7 @@ Created by Coldmooon.
 
 IDOF is an intrusion detection system based on Optical Flow. The system can alarm in several ways if there is any object breaking into a detection region. When used for vehicle detection, IDOF can reach nearly 100% mean average precision. During detection, each vehicle's kinetic energy is computed with Optical Flow. If the energy is over some threshold, IDOF will alarm.
 
-# Install
+# Installation
 
 The code depends on `Opencv2.4`. Please install `Opencv` first. If you have `cuda`, make a soft link of `cuda` to `/usr/local/cuda`. Then,
 
