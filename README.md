@@ -17,11 +17,11 @@ run `./IDOF` to detect through camera.
 run `./IDOF videofile` to detect in a video file  
 
 # Usage
-This project supports two modes of intrusion detection: `line` and `rectangle`.
+This system supports two modes of intrusion detection: `line` and `rectangle`.
 
 In the pop-up window, press `R` or `r` will enter the `rectangle` mode. Then use your mouse to draw a rectangle. IDOF will detect all the objects breaking into this region;
 
-Press `L` or `l` to switch to the `line drawing` mode. In this case, use the mouse to draw a line and IDOF will detect on the line. 
+Press `L` or `l` to switch to the `line` mode. In this case, use the mouse to draw a line and IDOF will detect on the line. 
 
 Press `p` to pause.
 
