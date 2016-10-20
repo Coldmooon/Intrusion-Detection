@@ -1,11 +1,13 @@
-﻿#include <iostream>
+#include <iostream>
 #include <vector>
 #include <string>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/video/video.hpp"
-
+//#include <sstream>
+#include <SFML/Audio.hpp>
+#include <SFML/Audio/SoundSource.hpp>
 using namespace cv;
 using namespace std;
 
@@ -17,6 +19,12 @@ typedef struct AllSelections
     Rect selection;
     int id;
 } PAllSelections;
+
+// rStatus = 0: No sound is played.
+// rStatus = 1: Now, play the sound.
+// rStatus = 2: The sound is being played.
+// The same to lStatus
+int rStatus = 0, lStatus = 0;
 
 int ihash[10] = {0};
 int ifUsed[10] = {0};
@@ -109,7 +117,7 @@ void onMouse(int event, int x, int y, int, void*)
             if( (nArea+1) != allSelection.size()) { cout << "nArea != allSelection"; exit(0);}
             if(allSelection[nArea].selection.height == 1 && allSelection[nArea].selection.width == 1)
             {
-                cout << "你点了下鼠标。" << endl;
+                cout << "Click!" << endl;
                 allSelection[nArea].id = 0;
             }
             else
@@ -288,6 +296,13 @@ int main(int argc, char** argv)
     bool paused = false;
     int energyOnLine = 0;
     int energyInRegion = 0;
+    string name = "./dog.ogg";
+    sf::Music music;
+    if (!music.openFromFile(name))
+    {
+        cout << "Can not load the sound file." << endl;
+        return -1;
+    }
     for(;;)
     {
         if(!paused)
@@ -346,12 +361,25 @@ int main(int argc, char** argv)
                                     energyInRegion += data[j].x*data[j].x + data[j].y*data[j].y;
                                 }
                             }
-                            if (energyInRegion > 5000) timeCountForRegion[k] = 50;
+                            if (energyInRegion > 5000) timeCountForRegion[k] = 15;
                             if ( timeCountForRegion[k] > 0)
                             {
+                                if (rStatus == 0)
+                                    rStatus = 1;
+                                
+                                // sound the alarm if recieve the signal 'rStatus = 1'.
+                                if (rStatus == 1)
+                                    music.play();
+                                // stop playing when the alarm terminates.
+                                if (timeCountForRegion[k] == 1 ) {
+                                    rStatus = 0;
+                                    music.stop();
+                                }
                                 putText(frame, ":Region Alarm!", Point(allSelection[k].selection.x+10, allSelection[k].selection.y-5),
                                         FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255,255,0), 1, CV_AA);
                             }
+                            if (rStatus == 1)
+                                rStatus = 2;
                             rectangle(frame, allSelection[k].selection, cv::Scalar(255,255,0), 2);
                             if (timeCountForRegion[k] != 0) timeCountForRegion[k]--;
                         }
@@ -365,12 +393,23 @@ int main(int argc, char** argv)
                                 int col = allPointSets[k][i].x-allSelection[k].selection.x;
                                 energyOnLine += fxy[col].x * fxy[col].x + fxy[col].y * fxy[col].y;
                             }
-                            if (energyOnLine > 100 ) timeCount[k] = 50;
+                            if (energyOnLine > 100 ) timeCount[k] = 15;
                             if ( timeCount[k] > 0)
                             {
+                                if (lStatus == 0)
+                                    lStatus = 1;
+                                
+                                if (lStatus == 1)
+                                    music.play();
+                                if (timeCount[k] == 1 ) {
+                                    lStatus = 0;
+                                    music.stop();
+                                }
                                 putText(frame, ":Line Alarm!", Point(allSelection[k].selection.x+10, allSelection[k].selection.y-5),
                                         FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0,255,0), 1, CV_AA);
                             }
+                            if (lStatus == 1)
+                                lStatus = 2;
                             line(frame, start[k], endP[k], Scalar(0,255,0));
                             if (timeCount[k] != 0) timeCount[k]--;
                         }
