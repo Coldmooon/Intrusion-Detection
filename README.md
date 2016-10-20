@@ -5,7 +5,7 @@ Created by Coldmooon.
 
 # Introduction
 
-IDOF is an intrusion detection system based on Optical Flow. The system can sound the alarm in several ways if there is any object breaking into a detection region. When used for vehicle detection, IDOF can reach nearly 100% mean average precision. During detection, each vehicle's kinetic energy is computed with Optical Flow. If the energy is over some threshold, IDOF will sound the alarm.
+IDOF is an intrusion detection system based on Optical Flow. The system can warn you (e.g. sound the alarm) in several ways if there is any object breaking into a detection region. When used for vehicle detection, IDOF can reach nearly 100% mean average precision. During detection, each vehicle's kinetic energy is computed with Optical Flow. If the energy is over some threshold, IDOF will sound the alarm.
 
 # Installation
 
